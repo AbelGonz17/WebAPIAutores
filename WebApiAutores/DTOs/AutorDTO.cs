@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.Extensions.FileSystemGlobbing.Internal.PathSegments;
+using System.ComponentModel.DataAnnotations;
 using WebApiAutores.Validaciones;
 
 namespace WebApiAutores.DTOs
 {
-    public class AutorDTO
+    public class AutorDTO:Recurso
     {
 
         public int Id { get; set; }     

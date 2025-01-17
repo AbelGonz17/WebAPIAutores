@@ -3,7 +3,7 @@ using WebApiAutores.Validaciones;
 
 namespace WebApiAutores.DTOs
 {
-    public class LibroDTO
+    public class LibroDTO:Recurso
     {
         public int Id { get; set; }      
         public string Titulo { get; set; }

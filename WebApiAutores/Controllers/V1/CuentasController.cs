@@ -12,11 +12,11 @@ using System.Text;
 using WebApiAutores.DTOs;
 using WebApiAutores.Servicios;
 
-namespace WebApiAutores.Controllers
+namespace WebApiAutores.Controllers.V1
 {
     [ApiController]
-    [Route("api/cuentas")]
-    public class CuentasController:ControllerBase   
+    [Route("api/v1/cuentas")]
+    public class CuentasController : ControllerBase
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly IConfiguration configuration;
@@ -25,7 +25,7 @@ namespace WebApiAutores.Controllers
         private readonly IDataProtector dataProtector;
 
         public CuentasController(UserManager<IdentityUser> userManager, IConfiguration configuration,
-            SignInManager<IdentityUser> signInManager,IDataProtectionProvider dataProtectionProvider,HashService hashService)
+            SignInManager<IdentityUser> signInManager, IDataProtectionProvider dataProtectionProvider, HashService hashService)
         {
             this.userManager = userManager;
             this.configuration = configuration;
@@ -34,46 +34,17 @@ namespace WebApiAutores.Controllers
             dataProtector = dataProtectionProvider.CreateProtector("valor_unico_y_quizas_secreto");
         }
 
-        [HttpGet("hash/{textoPlano}")]
-        public ActionResult RealizarHash(string textoPlano)
-        {
-            var resultado1 = hashService.Hash(textoPlano);
-            var resultado2 = hashService.Hash(textoPlano);
-
-            return Ok(new
-            {
-                textoPlano = textoPlano,
-                hash1 = resultado1,
-                hash2 = resultado2
-            });
-        }
-
-        [HttpGet("encriptar")]
-        public ActionResult Encriptar()
-        {
-            var textoPlano = "lo quiero mucho mi hermano Victor ";
-            var textoCrifrado = dataProtector.Protect(textoPlano);
-            var textoDesencriptado = dataProtector.Unprotect(textoCrifrado);
-
-            return Ok(new
-            {
-                textoPlano = textoPlano,
-                textoCrifrado = textoCrifrado,
-                textoDesencriptado = textoDesencriptado
-
-            });
-
-        }
-
-
-        [HttpPost("registrar")]
+        [HttpPost("registrar", Name = "registrarUsuario")]
         public async Task<ActionResult<RespuestaAutenticacionDTO>> Registrar(CredencialesUsuario credencialesUsuario)
         {
-            var usuario = new IdentityUser { UserName = credencialesUsuario.Email, 
-                Email = credencialesUsuario.Email};
+            var usuario = new IdentityUser
+            {
+                UserName = credencialesUsuario.Email,
+                Email = credencialesUsuario.Email
+            };
             var resultado = await userManager.CreateAsync(usuario, credencialesUsuario.Password);
 
-            if(resultado.Succeeded)
+            if (resultado.Succeeded)
             {
                 return await ConstruirToken(credencialesUsuario);
             }
@@ -83,7 +54,7 @@ namespace WebApiAutores.Controllers
             }
         }
 
-        [HttpPost("login")]
+        [HttpPost("login", Name = "loginUsuario")]
         public async Task<ActionResult<RespuestaAutenticacionDTO>> Login(CredencialesUsuario credencialesUsuario)
         {
             var resultado = await signInManager.PasswordSignInAsync(credencialesUsuario.Email
@@ -99,30 +70,9 @@ namespace WebApiAutores.Controllers
             }
         }
 
-        [HttpGet("encriptarPorTiempo")]
-        public ActionResult EncriptarPorTiempo()
-        {
-            var protectoPorTiempo = dataProtector.ToTimeLimitedDataProtector();
-
-            var textoPlano = "lo quiero mucho mi hermano Victor ";
-            var textoCrifrado = protectoPorTiempo.Protect(textoPlano, lifetime: TimeSpan.FromSeconds(5));
-            Thread.Sleep(6000);
-            var textoDesencriptado = protectoPorTiempo.Unprotect(textoCrifrado);
-
-            return Ok(new
-            {
-                textoPlano = textoPlano,
-                textoCrifrado = textoCrifrado,
-                textoDesencriptado = textoDesencriptado
-
-            });
-
-        }
-
-
-        [HttpGet("renovarToken")]
-        [Authorize(AuthenticationSchemes =JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<RespuestaAutenticacionDTO>>Renovar()
+        [HttpGet("renovarToken", Name = "renovarToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<RespuestaAutenticacionDTO>> Renovar()
         {
             var emailClaim = HttpContext.User.Claims.Where(claim => claim.Type == "email").FirstOrDefault();
             var email = emailClaim.Value;
@@ -163,7 +113,7 @@ namespace WebApiAutores.Controllers
 
         }
 
-        [HttpPost("hacerAdmin")]
+        [HttpPost("hacerAdmin", Name = "hacerAdmin")]
         public async Task<ActionResult> HacerAdmin(EditarAdminDTO editarAdminDTO)
         {
             var usuario = await userManager.FindByEmailAsync(editarAdminDTO.Email);
@@ -171,8 +121,8 @@ namespace WebApiAutores.Controllers
 
             return NoContent();
         }
-            
-        [HttpPost("removerAdmin")]
+
+        [HttpPost("removerAdmin", Name = "removerAdmin")]
         public async Task<ActionResult> RemoverAdmin(EditarAdminDTO editarAdminDTO)
         {
             var usuario = await userManager.FindByEmailAsync(editarAdminDTO.Email);
